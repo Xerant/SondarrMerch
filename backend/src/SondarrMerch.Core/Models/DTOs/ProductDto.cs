@@ -10,5 +10,6 @@ public sealed class ProductDto
     public string? Currency { get; init; }
     public string? ImageUrl { get; init; }
     public IReadOnlyList<string> ImageUrls { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<ProductVariantDto> Variants { get; init; } = Array.Empty<ProductVariantDto>();
     public bool Available { get; init; }
 }

@@ -66,6 +66,7 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
                     featuredImage { url }
                     images(first: 10) { edges { node { url } } }
                     priceRange { minVariantPrice { amount currencyCode } }
+                    variants(first: 25) { edges { node { id title availableForSale price { amount currencyCode } } } }
                   }
                 }
               }
@@ -101,6 +102,7 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
                   featuredImage { url }
                   images(first: 10) { edges { node { url } } }
                   priceRange { minVariantPrice { amount currencyCode } }
+                  variants(first: 25) { edges { node { id title availableForSale price { amount currencyCode } } } }
                 }
               }
             }
@@ -179,6 +181,7 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
                       featuredImage { url }
                       images(first: 10) { edges { node { url } } }
                       priceRange { minVariantPrice { amount currencyCode } }
+                      variants(first: 25) { edges { node { id title availableForSale price { amount currencyCode } } } }
                     }
                   }
                 }
@@ -457,6 +460,32 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
                 currency = cc.GetString();
         }
 
+        var variants = new List<ProductVariantDto>();
+        if (n.TryGetProperty("variants", out var vs) && vs.TryGetProperty("edges", out var vEdges))
+        {
+            foreach (var ve in vEdges.EnumerateArray())
+            {
+                if (!ve.TryGetProperty("node", out var vn)) continue;
+                decimal? vPrice = null;
+                string? vCurrency = null;
+                if (vn.TryGetProperty("price", out var vp))
+                {
+                    if (vp.TryGetProperty("amount", out var vAmt) && decimal.TryParse(vAmt.GetString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var vd))
+                        vPrice = vd;
+                    if (vp.TryGetProperty("currencyCode", out var vcc))
+                        vCurrency = vcc.GetString();
+                }
+                variants.Add(new ProductVariantDto
+                {
+                    Id = vn.GetProperty("id").GetString() ?? "",
+                    Title = vn.TryGetProperty("title", out var vt) ? vt.GetString() ?? "" : "",
+                    Price = vPrice,
+                    Currency = vCurrency,
+                    Available = vn.TryGetProperty("availableForSale", out var vAfs) && vAfs.GetBoolean()
+                });
+            }
+        }
+
         return new ProductDto
         {
             Id = n.GetProperty("id").GetString() ?? "",
@@ -467,6 +496,7 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
             Currency = currency,
             ImageUrl = featured ?? images.FirstOrDefault(),
             ImageUrls = images,
+            Variants = variants,
             Available = n.TryGetProperty("availableForSale", out var afs) && afs.GetBoolean()
         };
     }

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sell Merch — Sondarr</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="image-slot.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0c0e1e;color:#f0ebe0;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#d4920e;text-decoration:none}
+a:hover{color:#e8a520}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#d4920e}
+button,input,select,textarea{font-family:inherit}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.navlink{color:rgba(240,235,224,0.55);font-size:13px;font-weight:500;cursor:pointer;transition:color .15s;background:none;border:none;font-family:'DM Sans',sans-serif}
+.navlink:hover{color:#f0ebe0}
+.field{width:100%;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);color:#f0ebe0;font-size:13px;outline:none;transition:border-color .15s}
+.field:focus{border-color:rgba(212,146,14,0.5)}
+.field::placeholder{color:rgba(240,235,224,0.3)}
+.chip{padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.03);color:rgba(240,235,224,0.55);font-size:12px;cursor:pointer;transition:all .15s}
+.chip.active{background:rgba(212,146,14,0.15);border-color:rgba(212,146,14,0.45);color:#d4920e}
+.card{border:1px solid rgba(255,255,255,0.07);border-radius:18px;background:rgba(255,255,255,0.03);padding:24px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState}=React;
+const GOLD='linear-gradient(135deg,#d4920e,#e8a520)';
+const ARTIST={name:'Indie Vibes',share:85};
+
+/* icons */
+const IStore=({s=18})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v10a1 1 0 001 1h14a1 1 0 001-1V9"/><path d="M9 21v-6h6v6"/><path d="M3 9h18"/></svg>;
+const IUpload=({s=18})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>;
+const IKey=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>;
+const ILink=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>;
+const ICheck=({s=16})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>;
+const ISpinner=({s=18})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{animation:'spin 0.8s linear infinite'}}><path d="M12 2a10 10 0 0110 10" strokeLinecap="round"/></svg>;
+const ITrash=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>;
+const IEdit=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/></svg>;
+const IPlus=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+const IX=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const IArrowL=({s=13})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>;
+const IRefresh=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>;
+
+const SHOPIFY_MOCK=[
+{id:'s1',name:'Indie Vibes Vinyl Sticker Sheet',price:9,inv:120},
+{id:'s2',name:'Lo-Fi Sessions Beanie',price:24,inv:64},
+{id:'s3',name:'Analog Tour Longsleeve',price:36,inv:48},
+{id:'s4',name:'Indie Vibes Zine Vol. 2',price:14,inv:200},
+];
+
+function Logo(){
+  return <div style={{display:'flex',alignItems:'center',gap:10}}>
+    <div style={{width:30,height:30,borderRadius:8,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      <span style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:14,color:'#000'}}>S</span>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+      <span style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17,letterSpacing:'-0.02em'}}>sondarr</span>
+      <span style={{fontSize:9,letterSpacing:'0.16em',color:'#d4920e',fontWeight:600}}>SELL MERCH</span>
+    </div>
+  </div>;
+}
+function Header({mode,goDashboard}){
+  return <header style={{height:64,padding:'0 48px',display:'flex',alignItems:'center',justifyContent:'space-between',borderBottom:'1px solid rgba(255,255,255,0.07)',background:'rgba(6,8,18,0.9)',position:'sticky',top:0,zIndex:20}}>
+    <Logo/>
+    <div style={{display:'flex',alignItems:'center',gap:20}}>
+      <a href="Sondarr Merch.html" style={{fontSize:12,color:'rgba(240,235,224,0.4)'}}>Merch Shop</a>
+      <a href="Sondarr Home Redesign.html" style={{fontSize:12,color:'rgba(240,235,224,0.4)'}}>Back to Sondarr</a>
+      {mode!=='dashboard' && <button className="navlink" onClick={goDashboard} style={{color:'#d4920e'}}>Preview Dashboard →</button>}
+    </div>
+  </header>;
+}
+function Stepper({step}){
+  const steps=['Method','Setup','Review'];
+  const idx = step==='choose'?0: (step.includes('shopify')||step==='manual-form')?1:2;
+  return <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:36}}>
+    {steps.map((s,i)=><React.Fragment key={s}>
+      <div style={{display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:24,height:24,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,background:i<=idx?GOLD:'rgba(255,255,255,0.06)',color:i<=idx?'#000':'rgba(240,235,224,0.35)'}}>{i+1}</div>
+        <span style={{fontSize:12,color:i<=idx?'#f0ebe0':'rgba(240,235,224,0.3)'}}>{s}</span>
+      </div>
+      {i<steps.length-1 && <div style={{width:32,height:1,background:'rgba(255,255,255,0.1)'}}/>}
+    </React.Fragment>)}
+  </div>;
+}
+function RevShare({share}){
+  return <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:10,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.25)',fontSize:11,color:'#4ade80'}}>
+    You keep {share}% · Sondarr fee {100-share}%
+  </div>;
+}
+
+function ChooseMethod({onPick}){
+  return <div>
+    <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:32,marginBottom:8}}>Start selling merch</h1>
+    <p style={{fontSize:14,color:'rgba(240,235,224,0.5)',marginBottom:32,maxWidth:520}}>Plug in your existing Shopify store, or upload your own products directly. You set the price — Sondarr fans check out without leaving the app.</p>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+      <button onClick={()=>onPick('shopify-form')} className="card" style={{textAlign:'left',cursor:'pointer',display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{width:44,height:44,borderRadius:12,background:'rgba(212,146,14,0.12)',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4920e'}}><IStore s={20}/></div>
+        <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17}}>Connect Shopify</div>
+        <div style={{fontSize:13,color:'rgba(240,235,224,0.5)',lineHeight:1.5}}>Sync your existing catalog automatically. Inventory and pricing stay in sync with your store.</div>
+        <span style={{fontSize:13,color:'#d4920e',display:'flex',alignItems:'center',gap:6}}>Connect store <IArrowL s={12} style={{transform:'rotate(180deg)'}}/></span>
+      </button>
+      <button onClick={()=>onPick('manual-form')} className="card" style={{textAlign:'left',cursor:'pointer',display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{width:44,height:44,borderRadius:12,background:'rgba(212,146,14,0.12)',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4920e'}}><IUpload s={20}/></div>
+        <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17}}>Upload products manually</div>
+        <div style={{fontSize:13,color:'rgba(240,235,224,0.5)',lineHeight:1.5}}>No storefront yet? Add products one at a time — set your own price, images, and variants.</div>
+        <span style={{fontSize:13,color:'#d4920e',display:'flex',alignItems:'center',gap:6}}>Add products <IArrowL s={12} style={{transform:'rotate(180deg)'}}/></span>
+      </button>
+    </div>
+  </div>;
+}
+function ShopifyForm({onConnect,onBack}){
+  const [url,setUrl]=useState('');
+  const [key,setKey]=useState('');
+  return <div style={{maxWidth:460}}>
+    <button className="navlink" onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,marginBottom:20}}><IArrowL/>Back</button>
+    <h2 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:22,marginBottom:8}}>Connect your Shopify store</h2>
+    <p style={{fontSize:13,color:'rgba(240,235,224,0.5)',marginBottom:24}}>Enter your store details. We'll request read access to your product catalog.</p>
+    <div style={{display:'flex',flexDirection:'column',gap:12,marginBottom:20}}>
+      <div style={{position:'relative'}}>
+        <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'rgba(240,235,224,0.3)'}}><ILink/></span>
+        <input className="field" style={{paddingLeft:38}} placeholder="yourstore.myshopify.com" value={url} onChange={e=>setUrl(e.target.value)}/>
+      </div>
+      <div style={{position:'relative'}}>
+        <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'rgba(240,235,224,0.3)'}}><IKey/></span>
+        <input className="field" style={{paddingLeft:38}} placeholder="Admin API access token" type="password" value={key} onChange={e=>setKey(e.target.value)}/>
+      </div>
+    </div>
+    <button onClick={()=>onConnect(url||'indie-vibes-store.myshopify.com')} disabled={!url||!key} style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background: url&&key?GOLD:'rgba(255,255,255,0.08)',color: url&&key?'#000':'rgba(240,235,224,0.3)',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor: url&&key?'pointer':'not-allowed'}}>Connect store</button>
+    <p style={{fontSize:11,color:'rgba(240,235,224,0.3)',marginTop:14,lineHeight:1.5}}>Find your access token under Shopify Admin → Settings → Apps and sales channels → Develop apps.</p>
+  </div>;
+}
+function ShopifyConnecting({storeUrl}){
+  React.useEffect(()=>{},[]);
+  return <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16,padding:'60px 0'}}>
+    <div style={{color:'#d4920e'}}><ISpinner s={28}/></div>
+    <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17}}>Connecting to {storeUrl}…</div>
+    <div style={{fontSize:13,color:'rgba(240,235,224,0.4)'}}>Syncing product catalog</div>
+  </div>;
+}
+function ShopifySync({storeUrl,onFinish,onBack}){
+  const [included,setIncluded]=useState(SHOPIFY_MOCK.map(p=>p.id));
+  const toggle=id=>setIncluded(inc=>inc.includes(id)?inc.filter(x=>x!==id):[...inc,id]);
+  return <div>
+    <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
+      <div style={{color:'#4ade80'}}><ICheck s={18}/></div>
+      <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:18}}>Connected to {storeUrl}</div>
+    </div>
+    <p style={{fontSize:13,color:'rgba(240,235,224,0.5)',marginBottom:20}}>We found {SHOPIFY_MOCK.length} products. Choose which ones to list on Sondarr.</p>
+    <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
+      {SHOPIFY_MOCK.map(p=><label key={p.id} className="card" style={{display:'flex',alignItems:'center',gap:14,cursor:'pointer',padding:'14px 16px'}}>
+        <input type="checkbox" checked={included.includes(p.id)} onChange={()=>toggle(p.id)} style={{width:16,height:16,accentColor:'#d4920e'}}/>
+        <div style={{width:48,height:48,borderRadius:8,overflow:'hidden',flexShrink:0}}><image-slot id={'shopify-'+p.id} shape="rect"></image-slot></div>
+        <div style={{flex:1}}>
+          <div style={{fontFamily:'Syne,sans-serif',fontWeight:600,fontSize:14}}>{p.name}</div>
+          <div style={{fontSize:12,color:'rgba(240,235,224,0.4)'}}>{p.inv} in stock</div>
+        </div>
+        <div style={{fontSize:14,color:'#d4920e',fontWeight:600}}>${p.price}</div>
+      </label>)}
+    </div>
+    <div style={{display:'flex',gap:12,alignItems:'center'}}>
+      <button className="navlink" onClick={onBack}>Cancel</button>
+      <button onClick={()=>onFinish(SHOPIFY_MOCK.filter(p=>included.includes(p.id)))} style={{marginLeft:'auto',padding:'12px 24px',borderRadius:12,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor:'pointer'}}>Finish setup</button>
+    </div>
+  </div>;
+}
+function ManualForm({products,onAdd,onFinish,onBack}){
+  const blank={name:'',price:'',desc:'',cat:'Apparel',variants:[],inv:'',share:''};
+  const [f,setF]=useState(blank);
+  const [variantInput,setVariantInput]=useState('');
+  const set=(k,v)=>setF({...f,[k]:v});
+  const addVariant=()=>{if(variantInput.trim()){set('variants',[...f.variants,variantInput.trim()]);setVariantInput('');}};
+  const removeVariant=i=>set('variants',f.variants.filter((_,ix)=>ix!==i));
+  const canAdd=f.name&&f.price;
+  const nextIdx=products.length;
+  const add=()=>{onAdd({...f,price:parseFloat(f.price)||0,inv:parseInt(f.inv)||0,share:f.share?parseFloat(f.share):null,id:'m'+Date.now(),imgIdx:nextIdx});setF(blank);};
+  return <div style={{display:'grid',gridTemplateColumns:'1fr 340px',gap:36}}>
+    <div>
+      <button className="navlink" onClick={onBack} style={{display:'flex',alignItems:'center',gap:6,marginBottom:20}}><IArrowL/>Back</button>
+      <h2 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:22,marginBottom:20}}>Add a product</h2>
+      <div style={{display:'flex',gap:12,marginBottom:16}}>
+        <div style={{width:100,height:100,borderRadius:10,overflow:'hidden',flexShrink:0}}><image-slot id={'sell-'+nextIdx+'-1'} shape="rect" placeholder="Photo 1"></image-slot></div>
+        <div style={{width:100,height:100,borderRadius:10,overflow:'hidden',flexShrink:0}}><image-slot id={'sell-'+nextIdx+'-2'} shape="rect" placeholder="Photo 2"></image-slot></div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <input className="field" placeholder="Product name" value={f.name} onChange={e=>set('name',e.target.value)}/>
+        <textarea className="field" placeholder="Description" rows={3} style={{resize:'vertical'}} value={f.desc} onChange={e=>set('desc',e.target.value)}/>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <input className="field" placeholder="Price (USD)" type="number" value={f.price} onChange={e=>set('price',e.target.value)}/>
+          <select className="field" value={f.cat} onChange={e=>set('cat',e.target.value)}>
+            {['Apparel','Accessories','Vinyl & Media'].map(c=><option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <input className="field" placeholder="Inventory count" type="number" value={f.inv} onChange={e=>set('inv',e.target.value)}/>
+          <input className="field" placeholder={`Revenue share % (default ${ARTIST.share})`} type="number" value={f.share} onChange={e=>set('share',e.target.value)}/>
+        </div>
+        <div>
+          <div style={{fontSize:12,color:'rgba(240,235,224,0.4)',marginBottom:8}}>Variants (size, color, etc.)</div>
+          <div style={{display:'flex',gap:8,marginBottom:10}}>
+            <input className="field" placeholder="e.g. Large" value={variantInput} onChange={e=>setVariantInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addVariant()}/>
+            <button onClick={addVariant} style={{padding:'0 16px',borderRadius:10,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.04)',color:'#f0ebe0',cursor:'pointer'}}><IPlus/></button>
+          </div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {f.variants.map((v,i)=><span key={i} className="chip active" style={{display:'flex',alignItems:'center',gap:6}}>{v}<span onClick={()=>removeVariant(i)} style={{cursor:'pointer'}}><IX s={10}/></span></span>)}
+          </div>
+        </div>
+        <button onClick={add} disabled={!canAdd} style={{marginTop:8,padding:'12px',borderRadius:12,border:'none',background: canAdd?'rgba(212,146,14,0.15)':'rgba(255,255,255,0.05)',color: canAdd?'#d4920e':'rgba(240,235,224,0.3)',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:13,cursor: canAdd?'pointer':'not-allowed',border:'1px solid '+(canAdd?'rgba(212,146,14,0.4)':'rgba(255,255,255,0.08)')}}>+ Add to catalog</button>
+      </div>
+    </div>
+    <div>
+      <div style={{fontSize:12,color:'rgba(240,235,224,0.4)',marginBottom:12}}>{products.length} product{products.length!==1?'s':''} added</div>
+      <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:20}}>
+        {products.map(p=><div key={p.id} className="card" style={{padding:'12px 14px',display:'flex',gap:12,alignItems:'center'}}>
+          <div style={{width:40,height:40,borderRadius:8,overflow:'hidden',flexShrink:0}}><image-slot id={'sell-'+p.imgIdx+'-1'} shape="rect"></image-slot></div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:13,fontFamily:'Syne,sans-serif',fontWeight:600,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+            <div style={{fontSize:11,color:'rgba(240,235,224,0.4)'}}>{p.cat}</div>
+          </div>
+          <div style={{fontSize:13,color:'#d4920e',fontWeight:600}}>${p.price.toFixed(2)}</div>
+        </div>)}
+        {products.length===0 && <div style={{fontSize:12,color:'rgba(240,235,224,0.3)'}}>Products you add will appear here.</div>}
+      </div>
+      <button onClick={onFinish} disabled={products.length===0} style={{width:'100%',padding:'13px',borderRadius:12,border:'none',background: products.length?GOLD:'rgba(255,255,255,0.08)',color: products.length?'#000':'rgba(240,235,224,0.3)',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor: products.length?'pointer':'not-allowed'}}>Finish setup</button>
+    </div>
+  </div>;
+}
+
+function Dashboard({shopify,manual,onDisconnect,onResync,onAddMore,onRemoveManual}){
+  const totalProducts=(shopify?shopify.length:0)+manual.length;
+  return <div>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',marginBottom:28}}>
+      <div>
+        <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:32,marginBottom:6}}>Sell Merch</h1>
+        <p style={{fontSize:13,color:'rgba(240,235,224,0.5)'}}>{totalProducts} product{totalProducts!==1?'s':''} live on Sondarr Merch</p>
+      </div>
+      <RevShare share={ARTIST.share}/>
+    </div>
+
+    {shopify ? <div className="card" style={{display:'flex',alignItems:'center',gap:16,marginBottom:28}}>
+      <div style={{width:44,height:44,borderRadius:12,background:'rgba(212,146,14,0.12)',display:'flex',alignItems:'center',justifyContent:'center',color:'#d4920e'}}><IStore s={20}/></div>
+      <div style={{flex:1}}>
+        <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15,display:'flex',alignItems:'center',gap:8}}>indie-vibes-store.myshopify.com <span style={{width:6,height:6,borderRadius:'50%',background:'#4ade80',boxShadow:'0 0 6px #4ade80'}}/></div>
+        <div style={{fontSize:12,color:'rgba(240,235,224,0.4)'}}>Synced just now · {shopify.length} products imported</div>
+      </div>
+      <button onClick={onResync} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,0.09)',background:'rgba(255,255,255,0.04)',color:'#f0ebe0',fontSize:12,cursor:'pointer'}}><IRefresh/>Resync</button>
+      <button onClick={onDisconnect} style={{padding:'8px 14px',borderRadius:10,border:'1px solid rgba(248,113,113,0.25)',background:'rgba(248,113,113,0.08)',color:'#f87171',fontSize:12,cursor:'pointer'}}>Disconnect</button>
+    </div> : <button onClick={onAddMore('shopify-form')} className="card" style={{width:'100%',display:'flex',alignItems:'center',gap:14,marginBottom:28,cursor:'pointer',border:'1px dashed rgba(255,255,255,0.15)'}}>
+      <IStore s={18}/><span style={{fontSize:13,color:'rgba(240,235,224,0.5)'}}>Connect a Shopify store to sync your catalog automatically</span>
+    </button>}
+
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+      <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17}}>Your Products</h3>
+      <button onClick={onAddMore('manual-form')} style={{display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,border:'1px solid rgba(212,146,14,0.4)',background:'rgba(212,146,14,0.1)',color:'#d4920e',fontSize:12,cursor:'pointer'}}><IPlus s={12}/>Add Product</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:18}}>
+      {shopify && shopify.map(p=><div key={p.id} className="card" style={{padding:14}}>
+        <div style={{aspectRatio:'1/1',borderRadius:10,overflow:'hidden',marginBottom:10}}><image-slot id={'shopify-'+p.id} shape="rect"></image-slot></div>
+        <div style={{fontSize:9,letterSpacing:'0.06em',color:'#d4920e',textTransform:'uppercase',marginBottom:4}}>Shopify</div>
+        <div style={{fontFamily:'Syne,sans-serif',fontWeight:600,fontSize:13,marginBottom:4}}>{p.name}</div>
+        <div style={{fontSize:13,color:'#f0ebe0'}}>${p.price}</div>
+      </div>)}
+      {manual.map(p=><div key={p.id} className="card" style={{padding:14,position:'relative'}}>
+        <button onClick={()=>onRemoveManual(p.id)} style={{position:'absolute',top:10,right:10,background:'rgba(6,8,18,0.7)',border:'none',borderRadius:6,color:'rgba(240,235,224,0.5)',cursor:'pointer',padding:4}}><ITrash s={12}/></button>
+        <div style={{aspectRatio:'1/1',borderRadius:10,overflow:'hidden',marginBottom:10}}><image-slot id={'sell-'+p.imgIdx+'-1'} shape="rect"></image-slot></div>
+        <div style={{fontSize:9,letterSpacing:'0.06em',color:'rgba(240,235,224,0.35)',textTransform:'uppercase',marginBottom:4}}>Manual · {p.cat}</div>
+        <div style={{fontFamily:'Syne,sans-serif',fontWeight:600,fontSize:13,marginBottom:4}}>{p.name}</div>
+        <div style={{fontSize:13,color:'#f0ebe0'}}>${p.price.toFixed(2)}</div>
+        {p.share && <div style={{fontSize:10,color:'#4ade80',marginTop:2}}>{p.share}% share override</div>}
+      </div>)}
+      {totalProducts===0 && <div style={{gridColumn:'1/-1',padding:'40px 0',textAlign:'center',color:'rgba(240,235,224,0.3)',fontSize:13}}>No products yet — connect a store or add one manually.</div>}
+    </div>
+  </div>;
+}
+
+function App(){
+  const [mode,setMode]=useState('wizard');
+  const [step,setStep]=useState('choose');
+  const [storeUrl,setStoreUrl]=useState('');
+  const [shopify,setShopify]=useState(null);
+  const [manual,setManual]=useState([]);
+
+  const goDashboard=()=>{
+    if(!shopify && manual.length===0){
+      setShopify(SHOPIFY_MOCK);
+      setManual([{id:'seed1',name:'Wanderlust Tote',price:22,desc:'',cat:'Accessories',variants:[],inv:40,share:null,imgIdx:'seed1'}]);
+    }
+    setMode('dashboard');
+  };
+  const connectShopify=(url)=>{ setStoreUrl(url); setStep('shopify-connecting'); setTimeout(()=>setStep('shopify-sync'),1600); };
+  const finishShopify=(products)=>{ setShopify(products); setMode('dashboard'); };
+  const addManual=(p)=>setManual(m=>[...m,p]);
+  const finishManual=()=>setMode('dashboard');
+  const removeManual=(id)=>setManual(m=>m.filter(p=>p.id!==id));
+  const resync=()=>{};
+  const disconnect=()=>setShopify(null);
+
+  return <div style={{minHeight:'100vh'}}>
+    <Header mode={mode} goDashboard={goDashboard}/>
+    <div style={{maxWidth:1080,margin:'0 auto',padding:'44px 48px 80px'}}>
+      {mode==='wizard' && <React.Fragment>
+        <Stepper step={step}/>
+        {step==='choose' && <ChooseMethod onPick={setStep}/>}
+        {step==='shopify-form' && <ShopifyForm onConnect={connectShopify} onBack={()=>setStep('choose')}/>}
+        {step==='shopify-connecting' && <ShopifyConnecting storeUrl={storeUrl}/>}
+        {step==='shopify-sync' && <ShopifySync storeUrl={storeUrl} onFinish={finishShopify} onBack={()=>setStep('choose')}/>}
+        {step==='manual-form' && <ManualForm products={manual} onAdd={addManual} onFinish={finishManual} onBack={()=>setStep('choose')}/>}
+      </React.Fragment>}
+      {mode==='dashboard' && <Dashboard shopify={shopify} manual={manual}
+        onDisconnect={disconnect} onResync={resync}
+        onAddMore={(target)=>()=>{setMode('wizard');setStep(target);}}
+        onRemoveManual={removeManual}/>}
+    </div>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

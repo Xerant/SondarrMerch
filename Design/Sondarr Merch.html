@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sondarr Merch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="image-slot.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0c0e1e;color:#f0ebe0;font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#d4920e;text-decoration:none}
+a:hover{color:#e8a520}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#d4920e}
+button{font-family:inherit}
+input,select{font-family:inherit}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.navlink{color:rgba(240,235,224,0.55);font-size:13px;font-weight:500;cursor:pointer;transition:color .15s;background:none;border:none;font-family:'DM Sans',sans-serif}
+.navlink:hover{color:#f0ebe0}
+.navlink.active{color:#d4920e}
+.chip{padding:8px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.09);background:rgba(255,255,255,0.03);color:rgba(240,235,224,0.55);font-size:13px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.chip:hover{border-color:rgba(212,146,14,0.35);color:#f0ebe0}
+.chip.active{background:rgba(212,146,14,0.15);border-color:rgba(212,146,14,0.45);color:#d4920e}
+.pcard{border:1px solid rgba(255,255,255,0.07);border-radius:16px;background:rgba(255,255,255,0.03);overflow:hidden;cursor:pointer;transition:transform .18s,border-color .18s}
+.pcard:hover{transform:translateY(-3px);border-color:rgba(212,146,14,0.35)}
+.field{width:100%;padding:13px 16px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);color:#f0ebe0;font-size:13px;outline:none;transition:border-color .15s}
+.field:focus{border-color:rgba(212,146,14,0.5)}
+.field::placeholder{color:rgba(240,235,224,0.3)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const {useState,useMemo} = React;
+const GOLD='linear-gradient(135deg,#d4920e,#e8a520)';
+
+/* icons */
+const IBag=({s=18})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 7h12l1 14H5L6 7z"/><path d="M9 7a3 3 0 016 0"/></svg>;
+const IPlus=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+const IMinus=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+const IX=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+const ICheck=({s=28})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>;
+const IArrowR=({s=16})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>;
+const IArrowL=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>;
+const IMail=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>;
+const IUser=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+const IPin=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+const ICard=({s=14})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>;
+const IDollar=({s=16})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>;
+
+/* data */
+const ARTISTS=[
+{id:'a1',name:'Electronic Nights',genre:'Electronic',listeners:'12.4K',share:82},
+{id:'a2',name:'Jazz Essentials',genre:'Jazz',listeners:'8.2K',share:88},
+{id:'a3',name:'Rock Legends',genre:'Rock',listeners:'15.7K',share:78},
+{id:'a4',name:'Indie Vibes',genre:'Indie',listeners:'9.8K',share:85},
+{id:'a5',name:'Hip Hop Classics',genre:'Hip Hop',listeners:'18.3K',share:80},
+{id:'a6',name:'Live Sessions',genre:'Acoustic',listeners:'5.6K',share:90},
+];
+const CATS=['Apparel','Accessories','Vinyl & Media'];
+const PRODUCTS=[
+{id:'p1',artist:'a1',cat:'Apparel',name:'Nightpulse Tee',price:28,sizes:['S','M','L','XL'],desc:'Heavyweight cotton tee with the Electronic Nights waveform print across the chest.'},
+{id:'p2',artist:'a1',cat:'Apparel',name:'Voltage Hoodie',price:58,sizes:['S','M','L','XL'],desc:'Fleece-lined hoodie, embroidered logo, oversized fit.'},
+{id:'p3',artist:'a1',cat:'Vinyl & Media',name:'Nightpulse LP',price:32,desc:'Limited pressing double LP, 180g colored vinyl.'},
+{id:'p4',artist:'a2',cat:'Apparel',name:'Blue Note Tee',price:28,sizes:['S','M','L','XL'],desc:'Soft-washed tee with hand-drawn horn illustration.'},
+{id:'p5',artist:'a2',cat:'Accessories',name:'Essentials Tote',price:22,desc:'Canvas tote bag, screen-printed logo, reinforced straps.'},
+{id:'p6',artist:'a2',cat:'Vinyl & Media',name:'Live at the Blue Room LP',price:34,desc:'Recorded live, pressed to vinyl with gatefold sleeve.'},
+{id:'p7',artist:'a3',cat:'Apparel',name:'Legends Tour Tee',price:30,sizes:['S','M','L','XL'],desc:'Vintage-wash tour tee with tour-date back print.'},
+{id:'p8',artist:'a3',cat:'Accessories',name:'Amp Enamel Pin',price:10,desc:'Hard enamel pin, gold-plated backing.'},
+{id:'p9',artist:'a3',cat:'Vinyl & Media',name:'Legends Anthology LP',price:38,desc:'Career-spanning double LP compilation.'},
+{id:'p10',artist:'a4',cat:'Apparel',name:'Indie Vibes Hoodie',price:56,sizes:['S','M','L','XL'],desc:'Garment-dyed hoodie, minimalist chest logo.'},
+{id:'p11',artist:'a4',cat:'Accessories',name:'Sticker Pack',price:8,desc:'Set of 6 vinyl stickers, weatherproof.'},
+{id:'p12',artist:'a4',cat:'Accessories',name:'Ceramic Mug',price:18,desc:'12oz ceramic mug with wraparound artwork.'},
+{id:'p13',artist:'a5',cat:'Apparel',name:'Classics Cap',price:26,desc:'Structured 6-panel cap, embroidered front.'},
+{id:'p14',artist:'a5',cat:'Apparel',name:'Crate Digger Tee',price:28,sizes:['S','M','L','XL'],desc:'Boxy fit tee, record-crate graphic on back.'},
+{id:'p15',artist:'a5',cat:'Vinyl & Media',name:'Classics Boxset',price:64,desc:'Triple LP boxset with liner notes booklet.'},
+{id:'p16',artist:'a6',cat:'Apparel',name:'Session Tee',price:28,sizes:['S','M','L','XL'],desc:'Lightweight tee, hand-lettered session date print.'},
+{id:'p17',artist:'a6',cat:'Accessories',name:'Session Tote',price:22,desc:'Heavy canvas tote, raw edge finish.'},
+{id:'p18',artist:'a6',cat:'Accessories',name:'Ceramic Mug',price:18,desc:'Matte-glaze mug with session artwork.'},
+];
+const artistOf=id=>ARTISTS.find(a=>a.id===id);
+const fmt=n=>'$'+n.toFixed(2);
+
+/* shared bits */
+function Logo(){
+  return <div style={{display:'flex',alignItems:'center',gap:10}}>
+    <div style={{width:30,height:30,borderRadius:8,background:GOLD,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+      <span style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:14,color:'#000'}}>S</span>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',lineHeight:1}}>
+      <span style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17,letterSpacing:'-0.02em'}}>sondarr</span>
+      <span style={{fontSize:9,letterSpacing:'0.16em',color:'#d4920e',fontWeight:600}}>MERCH</span>
+    </div>
+  </div>;
+}
+function Header({view,go,cartCount}){
+  return <header style={{position:'sticky',top:0,zIndex:30,height:64,padding:'0 48px',display:'flex',alignItems:'center',justifyContent:'space-between',background:'rgba(6,8,18,0.9)',backdropFilter:'blur(12px)',borderBottom:'1px solid rgba(255,255,255,0.07)'}}>
+    <div style={{display:'flex',alignItems:'center',gap:36}}>
+      <button onClick={()=>go('shop')} style={{background:'none',border:'none',cursor:'pointer',padding:0}}><Logo/></button>
+      <nav style={{display:'flex',gap:24}}>
+        <button className={'navlink'+(view==='shop'?' active':'')} onClick={()=>go('shop')}>Shop</button>
+        <button className={'navlink'+(view==='collections'?' active':'')} onClick={()=>go('collections')}>Collections</button>
+      </nav>
+    </div>
+    <div style={{display:'flex',alignItems:'center',gap:20}}>
+      <a href="Sondarr Home Redesign.html" style={{fontSize:12,color:'rgba(240,235,224,0.4)',display:'flex',alignItems:'center',gap:6}}><IArrowL s={12}/>Back to Sondarr</a>
+      <button onClick={()=>go('cart')} style={{position:'relative',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:999,padding:'9px 12px',cursor:'pointer',color:'#f0ebe0',display:'flex',alignItems:'center'}}>
+        <IBag s={16}/>
+        {cartCount>0 && <span style={{position:'absolute',top:-6,right:-6,background:'#d4920e',color:'#000',fontSize:10,fontWeight:700,borderRadius:999,minWidth:17,height:17,display:'flex',alignItems:'center',justifyContent:'center',padding:'0 3px'}}>{cartCount}</span>}
+      </button>
+    </div>
+  </header>;
+}
+function Footer(){
+  return <footer style={{padding:'40px 48px',borderTop:'1px solid rgba(255,255,255,0.07)',marginTop:60,display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:16}}>
+    <div style={{display:'flex',alignItems:'center',gap:10}}>
+      <div style={{width:8,height:8,borderRadius:'50%',background:'#4ade80',boxShadow:'0 0 8px #4ade80'}}/>
+      <span style={{fontSize:12,color:'rgba(240,235,224,0.4)'}}>Fair-Pay: 75–90% of every sale goes directly to the artist</span>
+    </div>
+    <a href="Sondarr Sell Merch.html" style={{fontSize:12}}>Artist? Sell your merch on Sondarr →</a>
+  </footer>;
+}
+function RevBadge({share,style}){
+  return <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 14px',borderRadius:12,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.25)',...style}}>
+    <IDollar s={14} />
+    <span style={{fontSize:12,color:'#4ade80'}}>Artist receives <b>{share}%</b> of this sale</span>
+  </div>;
+}
+function ProductCard({p,go}){
+  const art=artistOf(p.artist);
+  return <div className="pcard" onClick={()=>go('product',p.id)}>
+    <div style={{aspectRatio:'4/5',position:'relative'}}>
+      <image-slot id={'shot-'+p.id} shape="rect" placeholder={p.name}></image-slot>
+    </div>
+    <div style={{padding:'14px 16px'}}>
+      <div style={{fontSize:10,letterSpacing:'0.08em',textTransform:'uppercase',color:'rgba(240,235,224,0.3)',marginBottom:6}}>{art.name}</div>
+      <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15,marginBottom:6}}>{p.name}</div>
+      <div style={{fontSize:14,color:'#d4920e',fontWeight:600}}>{fmt(p.price)}</div>
+    </div>
+  </div>;
+}
+
+/* views */
+function ShopView({go,filterArtist}){
+  const [cat,setCat]=useState('All');
+  const [artist,setArtist]=useState(filterArtist||'All');
+  const list=useMemo(()=>PRODUCTS.filter(p=>(cat==='All'||p.cat===cat)&&(artist==='All'||p.artist===artist)),[cat,artist]);
+  return <div style={{padding:'40px 48px'}}>
+    <div style={{marginBottom:32}}>
+      <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:38,letterSpacing:'-0.02em',marginBottom:8}}>Shop</h1>
+      <p style={{fontSize:15,fontWeight:300,color:'rgba(240,235,224,0.5)'}}>Official merch from Sondarr artists — every purchase pays the artist directly.</p>
+    </div>
+    <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:16}}>
+      {['All',...CATS].map(c=><button key={c} className={'chip'+(cat===c?' active':'')} onClick={()=>setCat(c)}>{c}</button>)}
+    </div>
+    <div style={{display:'flex',gap:10,flexWrap:'wrap',marginBottom:32}}>
+      <button className={'chip'+(artist==='All'?' active':'')} onClick={()=>setArtist('All')}>All Artists</button>
+      {ARTISTS.map(a=><button key={a.id} className={'chip'+(artist===a.id?' active':'')} onClick={()=>setArtist(a.id)}>{a.name}</button>)}
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:22}}>
+      {list.map(p=><ProductCard key={p.id} p={p} go={go}/>)}
+    </div>
+    {list.length===0 && <div style={{padding:'60px 0',textAlign:'center',color:'rgba(240,235,224,0.3)'}}>No products match these filters.</div>}
+  </div>;
+}
+function CollectionsView({go}){
+  return <div style={{padding:'40px 48px'}}>
+    <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:38,letterSpacing:'-0.02em',marginBottom:8}}>Artist Collections</h1>
+    <p style={{fontSize:15,fontWeight:300,color:'rgba(240,235,224,0.5)',marginBottom:32}}>Shop by artist and see exactly how much of your purchase reaches them.</p>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:22}}>
+      {ARTISTS.map(a=><div key={a.id} className="pcard" onClick={()=>go('artist',a.id)}>
+        <div style={{aspectRatio:'16/9',position:'relative'}}>
+          <image-slot id={'artist-'+a.id} shape="rect" placeholder={a.name}></image-slot>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(6,8,18,0.92),transparent 60%)'}}/>
+          <div style={{position:'absolute',bottom:14,left:16,right:16}}>
+            <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:18}}>{a.name}</div>
+            <div style={{fontSize:12,color:'rgba(240,235,224,0.5)'}}>{a.genre} · {a.listeners} listeners</div>
+          </div>
+        </div>
+      </div>)}
+    </div>
+  </div>;
+}
+function ArtistView({id,go}){
+  const a=artistOf(id);
+  const products=PRODUCTS.filter(p=>p.artist===id);
+  return <div style={{padding:'40px 48px'}}>
+    <button className="navlink" onClick={()=>go('collections')} style={{display:'flex',alignItems:'center',gap:6,marginBottom:20}}><IArrowL s={12}/>All Collections</button>
+    <div style={{position:'relative',borderRadius:24,overflow:'hidden',height:280,marginBottom:36,border:'1px solid rgba(255,255,255,0.07)'}}>
+      <image-slot id={'artist-'+a.id} shape="rect" placeholder={a.name}></image-slot>
+      <div style={{position:'absolute',inset:0,background:'linear-gradient(105deg,rgba(6,8,18,0.88) 20%,rgba(6,8,18,0.3) 80%)',pointerEvents:'none'}}/>
+      <div style={{position:'absolute',inset:0,padding:'32px 36px',display:'flex',flexDirection:'column',justifyContent:'flex-end',pointerEvents:'none'}}>
+        <div style={{fontSize:11,color:'#d4920e',letterSpacing:'0.1em',textTransform:'uppercase',marginBottom:8}}>{a.genre} · {a.listeners} listeners</div>
+        <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:44,marginBottom:14}}>{a.name}</h1>
+        <RevBadge share={a.share} style={{pointerEvents:'auto',width:'fit-content'}}/>
+      </div>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:22}}>
+      {products.map(p=><ProductCard key={p.id} p={p} go={go}/>)}
+    </div>
+  </div>;
+}
+function ProductView({id,go,addToCart}){
+  const p=PRODUCTS.find(x=>x.id===id);
+  const a=artistOf(p.artist);
+  const [size,setSize]=useState(p.sizes?p.sizes[1]:null);
+  const [qty,setQty]=useState(1);
+  const related=PRODUCTS.filter(x=>x.artist===p.artist&&x.id!==p.id).slice(0,4);
+  return <div style={{padding:'40px 48px'}}>
+    <button className="navlink" onClick={()=>go('shop')} style={{display:'flex',alignItems:'center',gap:6,marginBottom:24}}><IArrowL s={12}/>Back to Shop</button>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 420px',gap:48,marginBottom:56}}>
+      <div style={{aspectRatio:'1/1',borderRadius:20,overflow:'hidden',border:'1px solid rgba(255,255,255,0.07)'}}>
+        <image-slot id={'shot-'+p.id} shape="rect" placeholder={p.name}></image-slot>
+      </div>
+      <div>
+        <div style={{fontSize:11,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(240,235,224,0.3)',marginBottom:8}}>{p.cat}</div>
+        <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:32,marginBottom:10,lineHeight:1.1}}>{p.name}</h1>
+        <button className="navlink" onClick={()=>go('artist',a.id)} style={{fontSize:14,color:'#d4920e',marginBottom:16,padding:0}}>{a.name} →</button>
+        <div style={{fontSize:26,fontWeight:700,color:'#f0ebe0',marginBottom:20}}>{fmt(p.price)}</div>
+        <p style={{fontSize:14,color:'rgba(240,235,224,0.55)',lineHeight:1.6,marginBottom:24}}>{p.desc}</p>
+        {p.sizes && <div style={{marginBottom:24}}>
+          <div style={{fontSize:12,color:'rgba(240,235,224,0.4)',marginBottom:10}}>Size</div>
+          <div style={{display:'flex',gap:8}}>
+            {p.sizes.map(s=><button key={s} onClick={()=>setSize(s)} style={{width:44,height:40,borderRadius:10,cursor:'pointer',fontSize:13,border: size===s?'1.5px solid rgba(212,146,14,0.6)':'1.5px solid rgba(255,255,255,0.09)',background: size===s?'rgba(212,146,14,0.15)':'rgba(255,255,255,0.03)',color: size===s?'#d4920e':'#f0ebe0'}}>{s}</button>)}
+          </div>
+        </div>}
+        <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
+          <div style={{display:'flex',alignItems:'center',gap:0,border:'1px solid rgba(255,255,255,0.09)',borderRadius:10,overflow:'hidden'}}>
+            <button onClick={()=>setQty(Math.max(1,qty-1))} style={{width:36,height:40,background:'none',border:'none',color:'#f0ebe0',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><IMinus/></button>
+            <span style={{width:36,textAlign:'center',fontSize:14}}>{qty}</span>
+            <button onClick={()=>setQty(qty+1)} style={{width:36,height:40,background:'none',border:'none',color:'#f0ebe0',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}><IPlus/></button>
+          </div>
+          <button onClick={()=>{addToCart(p,size,qty);go('product',p.id);}} style={{flex:1,padding:'12px 20px',borderRadius:12,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor:'pointer'}}>Add to Cart</button>
+        </div>
+        <RevBadge share={a.share}/>
+      </div>
+    </div>
+    {related.length>0 && <div>
+      <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:19,marginBottom:20}}>More from {a.name}</h3>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:22}}>
+        {related.map(rp=><ProductCard key={rp.id} p={rp} go={go}/>)}
+      </div>
+    </div>}
+  </div>;
+}
+function CartView({cart,go,updateQty,removeItem}){
+  const subtotal=cart.reduce((s,i)=>s+i.product.price*i.qty,0);
+  const shipping=cart.length?6.5:0;
+  const total=subtotal+shipping;
+  const byArtist={};
+  cart.forEach(i=>{const a=artistOf(i.product.artist);const amt=i.product.price*i.qty*(a.share/100);byArtist[a.name]=(byArtist[a.name]||0)+amt;});
+  if(cart.length===0) return <div style={{padding:'40px 48px',textAlign:'center',minHeight:400,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16}}>
+    <IBag s={40}/>
+    <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:22}}>Your cart is empty</div>
+    <button onClick={()=>go('shop')} style={{padding:'12px 24px',borderRadius:999,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,cursor:'pointer'}}>Continue Shopping</button>
+  </div>;
+  return <div style={{padding:'40px 48px'}}>
+    <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:34,marginBottom:32}}>Your Cart</h1>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:40}}>
+      <div style={{display:'flex',flexDirection:'column',gap:16}}>
+        {cart.map((i,idx)=>{const a=artistOf(i.product.artist);return <div key={idx} style={{display:'flex',gap:16,padding:16,borderRadius:16,border:'1px solid rgba(255,255,255,0.07)',background:'rgba(255,255,255,0.03)'}}>
+          <div style={{width:80,height:80,borderRadius:10,overflow:'hidden',flexShrink:0}}><image-slot id={'shot-'+i.product.id} shape="rect"></image-slot></div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15}}>{i.product.name}</div>
+            <div style={{fontSize:12,color:'rgba(240,235,224,0.4)',marginBottom:6}}>{a.name}{i.size?' · Size '+i.size:''}</div>
+            <div style={{fontSize:14,color:'#d4920e',fontWeight:600}}>{fmt(i.product.price)}</div>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',justifyContent:'space-between'}}>
+            <button onClick={()=>removeItem(idx)} style={{background:'none',border:'none',color:'rgba(240,235,224,0.3)',cursor:'pointer'}}><IX/></button>
+            <div style={{display:'flex',alignItems:'center',border:'1px solid rgba(255,255,255,0.09)',borderRadius:8,overflow:'hidden'}}>
+              <button onClick={()=>updateQty(idx,-1)} style={{width:26,height:28,background:'none',border:'none',color:'#f0ebe0',cursor:'pointer'}}><IMinus s={11}/></button>
+              <span style={{width:24,textAlign:'center',fontSize:12}}>{i.qty}</span>
+              <button onClick={()=>updateQty(idx,1)} style={{width:26,height:28,background:'none',border:'none',color:'#f0ebe0',cursor:'pointer'}}><IPlus s={11}/></button>
+            </div>
+          </div>
+        </div>;})}
+      </div>
+      <div style={{border:'1px solid rgba(255,255,255,0.07)',borderRadius:16,background:'rgba(255,255,255,0.03)',padding:'22px 24px',height:'fit-content'}}>
+        <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:16,marginBottom:18}}>Order Summary</h3>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'rgba(240,235,224,0.5)',marginBottom:10}}><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'rgba(240,235,224,0.5)',marginBottom:14}}><span>Shipping</span><span>{fmt(shipping)}</span></div>
+        <div style={{borderTop:'1px solid rgba(255,255,255,0.07)',paddingTop:14,display:'flex',justifyContent:'space-between',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17,marginBottom:20}}><span>Total</span><span>{fmt(total)}</span></div>
+        <div style={{padding:'12px 14px',borderRadius:12,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.25)',marginBottom:20}}>
+          <div style={{fontSize:11,color:'#4ade80',fontWeight:600,marginBottom:6}}>ARTISTS RECEIVE</div>
+          {Object.entries(byArtist).map(([n,amt])=><div key={n} style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'rgba(240,235,224,0.6)',marginBottom:3}}><span>{n}</span><span style={{color:'#4ade80'}}>{fmt(amt)}</span></div>)}
+        </div>
+        <button onClick={()=>go('checkout')} style={{width:'100%',padding:'14px',borderRadius:12,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor:'pointer'}}>Checkout</button>
+      </div>
+    </div>
+  </div>;
+}
+function Field({icon:Icon,...props}){
+  return <div style={{position:'relative'}}>
+    <span style={{position:'absolute',left:14,top:'50%',transform:'translateY(-50%)',color:'rgba(240,235,224,0.3)',display:'flex'}}><Icon/></span>
+    <input className="field" style={{paddingLeft:38}} {...props}/>
+  </div>;
+}
+function CheckoutView({cart,go,clearCart}){
+  const subtotal=cart.reduce((s,i)=>s+i.product.price*i.qty,0);
+  const shipping=cart.length?6.5:0;
+  const total=subtotal+shipping;
+  return <div style={{padding:'40px 48px'}}>
+    <button className="navlink" onClick={()=>go('cart')} style={{display:'flex',alignItems:'center',gap:6,marginBottom:24}}><IArrowL s={12}/>Back to Cart</button>
+    <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:34,marginBottom:32}}>Checkout</h1>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:40}}>
+      <div style={{display:'flex',flexDirection:'column',gap:28}}>
+        <div>
+          <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15,marginBottom:14}}>Shipping</h3>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <Field icon={IUser} placeholder="Full name"/>
+            <Field icon={IMail} placeholder="Email address"/>
+            <Field icon={IPin} placeholder="Street address"/>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+              <input className="field" placeholder="City"/>
+              <input className="field" placeholder="State"/>
+              <input className="field" placeholder="ZIP"/>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:15,marginBottom:14}}>Payment</h3>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            <Field icon={ICard} placeholder="Card number"/>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <input className="field" placeholder="MM / YY"/>
+              <input className="field" placeholder="CVC"/>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{border:'1px solid rgba(255,255,255,0.07)',borderRadius:16,background:'rgba(255,255,255,0.03)',padding:'22px 24px',height:'fit-content'}}>
+        <h3 style={{fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:16,marginBottom:16}}>Order Summary</h3>
+        {cart.map((i,idx)=><div key={idx} style={{display:'flex',justifyContent:'space-between',fontSize:13,color:'rgba(240,235,224,0.5)',marginBottom:8}}><span>{i.product.name} × {i.qty}</span><span>{fmt(i.product.price*i.qty)}</span></div>)}
+        <div style={{borderTop:'1px solid rgba(255,255,255,0.07)',marginTop:10,paddingTop:14,display:'flex',justifyContent:'space-between',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:17,marginBottom:20}}><span>Total</span><span>{fmt(total)}</span></div>
+        <button onClick={()=>{clearCart();go('confirm');}} style={{width:'100%',padding:'14px',borderRadius:12,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,fontSize:14,cursor:'pointer'}}>Place Order</button>
+      </div>
+    </div>
+  </div>;
+}
+function ConfirmView({go}){
+  const order='SN-'+Math.floor(10000+Math.random()*89999);
+  return <div style={{padding:'80px 48px',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center',gap:16}}>
+    <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(34,197,94,0.15)',border:'1px solid rgba(34,197,94,0.4)',display:'flex',alignItems:'center',justifyContent:'center',color:'#4ade80'}}><ICheck/></div>
+    <h1 style={{fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:30}}>Order confirmed</h1>
+    <p style={{fontSize:14,color:'rgba(240,235,224,0.5)',maxWidth:420}}>Order {order} is on its way. A share of every dollar goes straight to the artists you supported — thanks for keeping music fair.</p>
+    <button onClick={()=>go('shop')} style={{marginTop:12,padding:'12px 24px',borderRadius:999,border:'none',background:GOLD,color:'#000',fontFamily:'Syne,sans-serif',fontWeight:700,cursor:'pointer'}}>Continue Shopping</button>
+  </div>;
+}
+
+function App(){
+  const [view,setView]=useState('shop');
+  const [selId,setSelId]=useState(null);
+  const [cart,setCart]=useState([]);
+  const go=(v,id)=>{setView(v);setSelId(id||null);window.scrollTo(0,0);};
+  const addToCart=(product,size,qty)=>setCart(c=>[...c,{product,size,qty}]);
+  const updateQty=(idx,d)=>setCart(c=>c.map((i,ix)=>ix===idx?{...i,qty:Math.max(1,i.qty+d)}:i));
+  const removeItem=idx=>setCart(c=>c.filter((_,ix)=>ix!==idx));
+  const clearCart=()=>setCart([]);
+  const cartCount=cart.reduce((s,i)=>s+i.qty,0);
+  return <div style={{minHeight:'100vh',display:'flex',flexDirection:'column'}}>
+    <Header view={view} go={go} cartCount={cartCount}/>
+    <div style={{flex:1}}>
+      {view==='shop' && <ShopView go={go}/>}
+      {view==='collections' && <CollectionsView go={go}/>}
+      {view==='artist' && <ArtistView id={selId} go={go}/>}
+      {view==='product' && <ProductView id={selId} go={go} addToCart={addToCart}/>}
+      {view==='cart' && <CartView cart={cart} go={go} updateQty={updateQty} removeItem={removeItem}/>}
+      {view==='checkout' && <CheckoutView cart={cart} go={go} clearCart={clearCart}/>}
+      {view==='confirm' && <ConfirmView go={go}/>}
+    </div>
+    <Footer/>
+  </div>;
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

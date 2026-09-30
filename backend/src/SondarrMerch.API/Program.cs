@@ -9,11 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((ctx, cfg) =>
     cfg.ReadFrom.Configuration(ctx.Configuration).WriteTo.Console());
 
-// ── CORS — allow Sondarr frontend + StreamingService ─────────────────────────
+// ── CORS — allow Sondarr frontend + StreamingService + Merch frontend ────────
 builder.Services.AddCors(o => o.AddPolicy("SondarrFrontend", p =>
     p.WithOrigins(
         builder.Configuration["AllowedOrigins:Frontend"] ?? "http://localhost:5173",
-        builder.Configuration["AllowedOrigins:Backend"] ?? "http://localhost:5000")
+        builder.Configuration["AllowedOrigins:Backend"] ?? "http://localhost:5000",
+        builder.Configuration["AllowedOrigins:MerchFrontend"] ?? "http://localhost:5174")
      .AllowAnyHeader()
      .AllowAnyMethod()));
 

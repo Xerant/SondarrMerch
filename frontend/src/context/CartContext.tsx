@@ -2,15 +2,18 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from 'react';
 import merchService from '../services/merchService';
 import type { Cart } from '../types/merch';
+import { useAuth } from './AuthContext';
 
-const CART_ID_KEY = 'merch_cart_id';
+// Per user, so a shared browser never hands one account's cart to another.
+const cartIdKey = (userId: string) => `merch_cart_id:${userId}`;
 
 interface CartContextValue {
   cart: Cart | null;
   loading: boolean;
   error: string | null;
   itemCount: number;
-  addLine: (variantId: string, quantity?: number) => Promise<void>;
+  /** Resolves false when the line couldn't be added (signed out, or the API failed). */
+  addLine: (variantId: string, quantity?: number) => Promise<boolean>;
   updateLine: (lineId: string, quantity: number) => Promise<void>;
   removeLine: (lineId: string) => Promise<void>;
   startCheckout: () => Promise<void>;
@@ -18,22 +21,26 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
+/** The signed-in user's cart. Buying needs a Sondarr account, so there is no cart while signed out. */
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { status, user } = useAuth();
+  const userId = status === 'authenticated' ? (user?.userId ?? null) : null;
+
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    async function init() {
+    async function init(id: string) {
       setLoading(true);
       setError(null);
       try {
-        const existingId = localStorage.getItem(CART_ID_KEY);
+        const existingId = localStorage.getItem(cartIdKey(id));
         let active = existingId ? await merchService.getCart(existingId) : null;
         if (!active) {
           active = await merchService.createCart();
-          localStorage.setItem(CART_ID_KEY, active.id);
+          localStorage.setItem(cartIdKey(id), active.id);
         }
         if (!cancelled) setCart(active);
       } catch {
@@ -42,20 +49,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
         if (!cancelled) setLoading(false);
       }
     }
-    init();
+
+    if (userId) {
+      void init(userId);
+    } else {
+      setCart(null);
+      setError(null);
+      setLoading(status === 'loading');
+    }
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [userId, status]);
 
   const addLine = useCallback(
     async (variantId: string, quantity = 1) => {
-      if (!cart) return;
+      if (!cart) return false;
       setError(null);
       try {
         setCart(await merchService.addLine(cart.id, variantId, quantity));
+        return true;
       } catch {
         setError('Could not add that item to your cart.');
+        return false;
       }
     },
     [cart],

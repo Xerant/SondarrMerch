@@ -346,15 +346,20 @@ public sealed class ShopifyCommerceProvider : ICommerceProvider
     public Task<WebhookEventDto?> ParseWebhookAsync(string rawBody, IHeaderDictionary headers, CancellationToken ct = default)
     {
         _ = ct;
+        // Fail closed: no secret configured, no signature header, or a bad signature
+        // all reject the request.
         var secret = _options.Value.WebhookSecret;
-        if (!string.IsNullOrEmpty(secret) && headers.TryGetValue("X-Shopify-Hmac-Sha256", out var hmacValues))
+        if (string.IsNullOrEmpty(secret))
         {
-            var provided = hmacValues.FirstOrDefault();
-            if (!VerifyShopifyHmac(rawBody, secret, provided))
-            {
-                _logger.LogWarning("Shopify webhook HMAC verification failed.");
-                return Task.FromResult<WebhookEventDto?>(null);
-            }
+            _logger.LogWarning("Shopify webhook rejected: Shopify:WebhookSecret is not configured.");
+            return Task.FromResult<WebhookEventDto?>(null);
+        }
+
+        headers.TryGetValue("X-Shopify-Hmac-Sha256", out var hmacValues);
+        if (!VerifyShopifyHmac(rawBody, secret, hmacValues.FirstOrDefault()))
+        {
+            _logger.LogWarning("Shopify webhook HMAC verification failed.");
+            return Task.FromResult<WebhookEventDto?>(null);
         }
 
         headers.TryGetValue("X-Shopify-Topic", out var topics);

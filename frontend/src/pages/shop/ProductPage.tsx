@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check } from 'lucide-react';
 import merchService from '../../services/merchService';
 import type { Product } from '../../types/merch';
 import { formatPrice } from '../../lib/format';
 import { QuantityStepper } from '../../components/QuantityStepper';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export function ProductPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { addLine } = useCart();
+  const { status: authStatus } = useAuth();
+  const signedIn = authStatus === 'authenticated';
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +23,7 @@ export function ProductPage() {
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
   const [added, setAdded] = useState(false);
+  const [addFailed, setAddFailed] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -61,10 +66,18 @@ export function ProductPage() {
 
   const handleAddToCart = async () => {
     if (!variantId) return;
+    if (!signedIn) {
+      // Browsing is public; buying needs a Sondarr account.
+      navigate(`/login?returnTo=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     setAdding(true);
+    setAdded(false);
+    setAddFailed(false);
     try {
-      await addLine(variantId, qty);
-      setAdded(true);
+      const ok = await addLine(variantId, qty);
+      setAdded(ok);
+      setAddFailed(!ok);
     } finally {
       setAdding(false);
     }
@@ -147,9 +160,13 @@ export function ProductPage() {
                 cursor: canAdd && !adding ? 'pointer' : 'not-allowed',
               }}
             >
-              {adding ? 'Adding…' : canAdd ? 'Add to Cart' : 'Sold Out'}
+              {adding ? 'Adding…' : !canAdd ? 'Sold Out' : signedIn ? 'Add to Cart' : 'Sign in to Buy'}
             </button>
           </div>
+
+          {addFailed && (
+            <div style={{ fontSize: 13, color: 'var(--red)' }}>Could not add that item to your cart. Please try again.</div>
+          )}
 
           {added && (
             <div

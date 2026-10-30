@@ -6,8 +6,13 @@ using SondarrMerch.Core.Services;
 
 namespace SondarrMerch.API.Controllers;
 
+/// <summary>
+/// Catalog reads are public so anyone can browse. Cart and checkout need a
+/// signed-in Sondarr account (Bearer token or the shared .sondarr.com cookie).
+/// </summary>
 [ApiController]
 [Route("api/merch")]
+[Authorize]
 public sealed class MerchController : ControllerBase
 {
     private readonly MerchService _merch;
@@ -20,7 +25,7 @@ public sealed class MerchController : ControllerBase
     }
 
     [HttpGet("products")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts(
         [FromQuery] string? search,
         [FromQuery] int page = 1,
@@ -34,14 +39,14 @@ public sealed class MerchController : ControllerBase
     }
 
     [HttpGet("products/featured")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetFeatured([FromQuery] int limit = 8, CancellationToken ct = default)
     {
         return Ok(await _merch.GetFeaturedProductsAsync(limit, ct).ConfigureAwait(false));
     }
 
     [HttpGet("products/{id}")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<ProductDto>> GetProduct(string id, CancellationToken ct = default)
     {
         var product = await _merch.GetProductByIdAsync(id, ct).ConfigureAwait(false);
@@ -49,28 +54,26 @@ public sealed class MerchController : ControllerBase
     }
 
     [HttpGet("collections")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<CollectionDto>>> GetCollections(CancellationToken ct = default)
     {
         return Ok(await _merch.GetCollectionsAsync(ct).ConfigureAwait(false));
     }
 
     [HttpGet("collections/{id}/products")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetCollectionProducts(string id, CancellationToken ct = default)
     {
         return Ok(await _merch.GetProductsByCollectionAsync(id, ct).ConfigureAwait(false));
     }
 
     [HttpPost("cart")]
-    [Authorize]
     public async Task<ActionResult<CartDto>> CreateCart(CancellationToken ct = default)
     {
         return Ok(await _merch.CreateCartAsync(ct).ConfigureAwait(false));
     }
 
     [HttpGet("cart/{id}")]
-    [Authorize]
     public async Task<ActionResult<CartDto>> GetCart(string id, CancellationToken ct = default)
     {
         var cart = await _merch.GetCartAsync(id, ct).ConfigureAwait(false);
@@ -78,28 +81,24 @@ public sealed class MerchController : ControllerBase
     }
 
     [HttpPost("cart/{id}/lines")]
-    [Authorize]
     public async Task<ActionResult<CartDto>> AddLine(string id, [FromBody] CartLineItemDto body, CancellationToken ct = default)
     {
         return Ok(await _merch.AddToCartAsync(id, body, ct).ConfigureAwait(false));
     }
 
     [HttpPatch("cart/{id}/lines/{lineId}")]
-    [Authorize]
     public async Task<ActionResult<CartDto>> UpdateLine(string id, string lineId, [FromBody] UpdateLineBody body, CancellationToken ct = default)
     {
         return Ok(await _merch.UpdateCartLineAsync(id, lineId, body.Quantity, ct).ConfigureAwait(false));
     }
 
     [HttpDelete("cart/{id}/lines/{lineId}")]
-    [Authorize]
     public async Task<ActionResult<CartDto>> RemoveLine(string id, string lineId, CancellationToken ct = default)
     {
         return Ok(await _merch.RemoveFromCartAsync(id, lineId, ct).ConfigureAwait(false));
     }
 
     [HttpPost("cart/{id}/checkout")]
-    [Authorize]
     public async Task<ActionResult<CheckoutUrlDto>> Checkout(string id, CancellationToken ct = default)
     {
         return Ok(await _merch.GetCheckoutUrlAsync(id, ct).ConfigureAwait(false));
@@ -112,7 +111,8 @@ public sealed class MerchController : ControllerBase
         using var reader = new StreamReader(Request.Body);
         var raw = await reader.ReadToEndAsync(ct).ConfigureAwait(false);
         var evt = await _provider.ParseWebhookAsync(raw, Request.Headers, ct).ConfigureAwait(false);
-        return evt is null ? Unauthorized() : Accepted(evt);
+        // Nothing consumes the event yet; acknowledge without echoing the payload back.
+        return evt is null ? Unauthorized() : Accepted();
     }
 }
 

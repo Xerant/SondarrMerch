@@ -1,12 +1,15 @@
-import { ArrowLeft, ShoppingBag } from 'lucide-react';
-import { Link, NavLink } from 'react-router-dom';
+import { ArrowLeft, LogOut, ShoppingBag } from 'lucide-react';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 const SONDARR_APP_URL = import.meta.env.VITE_SONDARR_APP_URL || 'http://localhost:5173';
 
 export function ShopHeader() {
   const { itemCount } = useCart();
+  const { status, user, signOut } = useAuth();
+  const location = useLocation();
 
   return (
     <header
@@ -45,6 +48,24 @@ export function ShopHeader() {
           <ArrowLeft size={12} />
           Back to Sondarr
         </a>
+        {status === 'authenticated' ? (
+          <button
+            onClick={() => void signOut()}
+            title={user?.email ? `Signed in as ${user.email}` : undefined}
+            className="navlink"
+            style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <LogOut size={12} />
+            Sign out
+          </button>
+        ) : status !== 'loading' && location.pathname !== '/login' ? (
+          <Link
+            to={`/login?returnTo=${encodeURIComponent(location.pathname)}`}
+            className="navlink"
+          >
+            Sign in
+          </Link>
+        ) : null}
         <Link
           to="/cart"
           style={{

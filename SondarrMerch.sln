@@ -5,11 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.Core", "src\SondarrMerch.Core\SondarrMerch.Core.csproj", "{BB28DABE-71BF-4299-9B38-D7E874216B8A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.Core", "backend\src\SondarrMerch.Core\SondarrMerch.Core.csproj", "{BB28DABE-71BF-4299-9B38-D7E874216B8A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.Providers.Shopify", "src\SondarrMerch.Providers.Shopify\SondarrMerch.Providers.Shopify.csproj", "{A07F75E0-9EED-4D85-87F4-1B8A17F6285D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.Providers.Shopify", "backend\src\SondarrMerch.Providers.Shopify\SondarrMerch.Providers.Shopify.csproj", "{A07F75E0-9EED-4D85-87F4-1B8A17F6285D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.API", "src\SondarrMerch.API\SondarrMerch.API.csproj", "{0393378A-DC11-4107-8BBC-7C7418F2B981}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SondarrMerch.API", "backend\src\SondarrMerch.API\SondarrMerch.API.csproj", "{0393378A-DC11-4107-8BBC-7C7418F2B981}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

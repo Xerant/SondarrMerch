@@ -1,11 +1,48 @@
 import { Link } from 'react-router-dom';
 import { ShoppingBag, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatPrice } from '../../lib/format';
 import { QuantityStepper } from '../../components/QuantityStepper';
 
 export function CartPage() {
   const { cart, loading, error, updateLine, removeLine, startCheckout } = useCart();
+  const { status: authStatus } = useAuth();
+
+  if (authStatus === 'unauthenticated' || authStatus === 'error') {
+    return (
+      <div
+        style={{
+          padding: '40px 48px',
+          textAlign: 'center',
+          minHeight: 400,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 16,
+        }}
+      >
+        <ShoppingBag size={40} />
+        <div style={{ fontFamily: 'Syne,sans-serif', fontWeight: 700, fontSize: 22 }}>Sign in to see your cart</div>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Use the same account you use on Sondarr.</div>
+        <Link
+          to="/login?returnTo=%2Fcart"
+          style={{
+            padding: '12px 24px',
+            borderRadius: 999,
+            border: 'none',
+            background: 'var(--gold-gradient)',
+            color: '#000',
+            fontFamily: 'Syne,sans-serif',
+            fontWeight: 700,
+          }}
+        >
+          Sign In
+        </Link>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div style={{ padding: '60px 48px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading your cart&hellip;</div>;
